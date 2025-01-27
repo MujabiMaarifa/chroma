@@ -25,8 +25,11 @@ var generateCmd = &cobra.Command{
 			fmt.Fprintln(os.Stderr, "[ERROR]: please provide a filepath")
 			os.Exit(1)
 		}
-		fileName := args[0]
-		generate(fileName)
+
+		if err := generate(); err != nil {
+			fmt.Fprintln(os.Stderr, "[ERROR]: please provide a filepath")
+			os.Exit(1)
+		}
 
 	},
 }
