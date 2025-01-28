@@ -33,7 +33,7 @@ type ChatRequest struct {
 func getApiKey() string {
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error loading .env file: %s", err)
+		fmt.Fprintf(os.Stderr, "Error: loading .env file: %s", err)
 	}
 
 	apiKey := os.Getenv("API_KEY")
@@ -70,12 +70,12 @@ func generateMd(apiKey string, writeFilePath string, file []byte) {
 
 	payloadBytes, err := json.Marshal(generateMdPayload)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error marshaling generateMd: %s", err)
+		fmt.Fprintf(os.Stderr, "Error: marshaling generateMd: %s", err)
 	}
 
 	req, err := http.NewRequest("POST", API_URL, bytes.NewBuffer(payloadBytes))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error creating generateMd: %s", err)
+		fmt.Fprintf(os.Stderr, "Error: creating generateMd: %s", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+apiKey)
@@ -84,7 +84,7 @@ func generateMd(apiKey string, writeFilePath string, file []byte) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error making generateMd: %s", err)
+		fmt.Fprintf(os.Stderr, "Error: making generateMd: %s", err)
 	}
 	defer resp.Body.Close()
 
@@ -101,7 +101,7 @@ func generateMd(apiKey string, writeFilePath string, file []byte) {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		fmt.Fprintf(os.Stderr, "error decoding response: %s", err)
+		fmt.Fprintf(os.Stderr, "Error: decoding response: %s", err)
 	}
 
 	if len(response.Choices) > 0 {
@@ -113,18 +113,18 @@ func generateMd(apiKey string, writeFilePath string, file []byte) {
 func writeFile(filename string, data string) {
 	file, err := os.Create(filename)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error could not create file: %s", err)
+		fmt.Fprintf(os.Stderr, "Error: could not create file: %s", err)
 	}
 	defer file.Close()
 	writer := bufio.NewWriter(file)
 	_, err = writer.WriteString(data)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error could not write to file: %s", err)
+		fmt.Fprintf(os.Stderr, "Error: could not write to file: %s", err)
 	}
 	err = writer.Flush()
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error could not flush buffer: %s", err)
+		fmt.Fprintf(os.Stderr, "Error: could not flush buffer: %s", err)
 	}
 
 }

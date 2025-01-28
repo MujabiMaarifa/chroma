@@ -23,6 +23,9 @@ var rootCmd = &cobra.Command{
 var markdownCmd = &cobra.Command{
 	Use:   "md",
 	Short: "Generate markdown documentation and save it to a file",
+	Long: `Takes a file as input and generates markdown documentation and saves it to the specified output file.
+Warning: If a file already exists its contents will be replaced.
+          `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
 			fmt.Fprintln(os.Stderr, "Error: please provide a <code path> : <save file>")
