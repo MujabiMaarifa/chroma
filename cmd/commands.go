@@ -43,8 +43,26 @@ Warning: If a file already exists its contents will be replaced.
 	},
 }
 
+var inlineCmd = &cobra.Command{
+	Use:   "il",
+	Short: "Generate inline documentation and save it to a file",
+	Long: `Takes a file as input and generates inline documentation(comments) and saves it to the  same  file.
+Warning: The file contents will be replaced by the ai function.
+          `,
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			fmt.Fprintln(os.Stderr, "Error: please provide a <code path> ")
+			os.Exit(1)
+		}
+		fileName := args[0]
+		file := readFile(fileName)
+		inlineComm(apiKey, fileName, file)
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(markdownCmd)
+	rootCmd.AddCommand(inlineCmd)
 }
 
 func Execute() {
