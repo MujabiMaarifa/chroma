@@ -173,6 +173,13 @@ func inlineComm(apiKey string, writeFilePath string, file []byte) {
 
 }
 
+func makeDir(dirName string) {
+	err := os.MkdirAll(dirName, 0644)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: could not create a dir: %s", err)
+	}
+}
+
 func writeFile(filename string, data string) {
 	file, err := os.Create(filename)
 	if err != nil {
