@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -12,13 +13,16 @@ import (
 
 const API_URL = "https://api.mistral.ai/v1/chat/completions"
 
-// Message represents a chat message
+var (
+	star     = " You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does. You will return markdown and only markdown in the format specified by the starlight astro framework"
+	markdown = " You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does. You will return markdown and only markdown.Make sure to keep your documentation brief but super clear "
+)
+
 type Message struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-// ChatRequest represents the request structure for chat completions
 type ChatRequest struct {
 	Model       string    `json:"model"`
 	Messages    []Message `json:"messages"`
@@ -26,41 +30,52 @@ type ChatRequest struct {
 	MaxTokens   int       `json:"max_tokens,omitempty"`
 }
 
-func generate() error {
+func getApiKey() string {
 	err := godotenv.Load()
 	if err != nil {
-		return fmt.Errorf("error loading .env file: %w", err)
+		fmt.Fprintf(os.Stderr, "error loading .env file: %s", err)
 	}
 
 	apiKey := os.Getenv("API_KEY")
 	if apiKey == "" {
-		return fmt.Errorf("API_KEY not found in environment variables")
+		fmt.Fprintf(os.Stderr, "API_KEY not found in environment variables")
 	}
-
-	return request(apiKey)
+	return apiKey
 }
 
-func request(apiKey string) error {
-	requestPayload := ChatRequest{
+func readFile(fileName string) []byte {
+	file, err := os.ReadFile(fileName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Could not read file")
+	}
+	return file
+}
+
+func generateMd(apiKey string, writeFilePath string, file []byte) {
+	generateMdPayload := ChatRequest{
 		Model: "codestral-latest",
 		Messages: []Message{
 			{
 				Role:    "user",
-				Content: "Generate a Go function that adds two numbers",
+				Content: string(file),
+			},
+			{
+				Role:    "system",
+				Content: markdown,
 			},
 		},
 		Temperature: 0.5,
-		MaxTokens:   100,
+		MaxTokens:   100000,
 	}
 
-	payloadBytes, err := json.Marshal(requestPayload)
+	payloadBytes, err := json.Marshal(generateMdPayload)
 	if err != nil {
-		return fmt.Errorf("error marshaling request: %w", err)
+		fmt.Fprintf(os.Stderr, "error marshaling generateMd: %s", err)
 	}
 
 	req, err := http.NewRequest("POST", API_URL, bytes.NewBuffer(payloadBytes))
 	if err != nil {
-		return fmt.Errorf("error creating request: %w", err)
+		fmt.Fprintf(os.Stderr, "error creating generateMd: %s", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+apiKey)
@@ -69,12 +84,12 @@ func request(apiKey string) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("error making request: %w", err)
+		fmt.Fprintf(os.Stderr, "error making generateMd: %s", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		fmt.Fprintf(os.Stderr, "unexpected status code: %d", resp.StatusCode)
 	}
 
 	var response struct {
@@ -86,12 +101,30 @@ func request(apiKey string) error {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return fmt.Errorf("error decoding response: %w", err)
+		fmt.Fprintf(os.Stderr, "error decoding response: %s", err)
 	}
 
 	if len(response.Choices) > 0 {
-		fmt.Println("Generated Code:", response.Choices[0].Message.Content)
+		writeFile(writeFilePath, response.Choices[0].Message.Content)
 	}
 
-	return nil
+}
+
+func writeFile(filename string, data string) {
+	file, err := os.Create(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error could not create file: %s", err)
+	}
+	defer file.Close()
+	writer := bufio.NewWriter(file)
+	_, err = writer.WriteString(data)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error could not write to file: %s", err)
+	}
+	err = writer.Flush()
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error could not flush buffer: %s", err)
+	}
+
 }
