@@ -60,9 +60,21 @@ Warning: The file contents will be replaced by the ai function.
 	},
 }
 
+var starCmd = &cobra.Command{
+	Use:   "star",
+	Short: "Generates astro documentation",
+	Long: `Creates a docs directory with the generated documentation of the astro framework.
+Warning: The file contents will be replaced by the ai function.
+          `,
+	Run: func(cmd *cobra.Command, args []string) {
+		getDocs()
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(markdownCmd)
 	rootCmd.AddCommand(inlineCmd)
+	rootCmd.AddCommand(starCmd)
 }
 
 func Execute() {

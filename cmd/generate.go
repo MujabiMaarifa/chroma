@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 
@@ -16,7 +17,7 @@ import (
 const API_URL = "https://api.mistral.ai/v1/chat/completions"
 
 var (
-	star     = " You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does. You will return markdown and only markdown in the format specified by the starlight astro framework"
+	star     = " You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does. You will return markdown and only markdown in the format specified by the starlight astro framework and show examples of function usage where possible. your explanations are to be short but clear"
 	markdown = " You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does. You will return markdown and only markdown.Make sure to keep your documentation brief but super clear "
 	inline   = " You are one of the greatest programmers to ever live, you will receive code and your job would be to add inline comments explaining what the code does. Keep the comments short but clear do not alter the file in any other way than to add comments and do not return anything other than the file provided with the comments.Do not return markdown or any other format just the code you have been given back with comments"
 )
@@ -171,6 +172,84 @@ func inlineComm(apiKey string, writeFilePath string, file []byte) {
 		writeFile(writeFilePath, codeBlocks[0])
 	}
 
+}
+
+func starLight(apiKey string, writeFilePath string, file []byte) {
+	starLightPayload := ChatRequest{
+		Model: "codestral-latest",
+		Messages: []Message{
+			{
+				Role:    "user",
+				Content: string(file),
+			},
+			{
+				Role:    "system",
+				Content: star,
+			},
+		},
+		Temperature: 0.5,
+		MaxTokens:   100000,
+	}
+
+	payloadBytes, err := json.Marshal(starLightPayload)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: marshaling starLight: %s", err)
+	}
+
+	req, err := http.NewRequest("POST", API_URL, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: creating starLight: %s", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: making starLight: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Fprintf(os.Stderr, "unexpected status code: %d", resp.StatusCode)
+	}
+
+	var response struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: decoding response: %s", err)
+	}
+
+	if len(response.Choices) > 0 {
+		codeBlocks := extractCodeBlocks(response.Choices[0].Message.Content)
+		writeFile(writeFilePath, codeBlocks[0])
+	}
+
+}
+
+func getDocs() {
+	cmd := exec.Command("git", "clone", "--depth=1", "https://github.com/chachacollins/chromatemplate.git", "docs")
+	_, err := cmd.Output()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: could not run command: %s", err)
+	}
+	installDocs()
+}
+
+func installDocs() {
+	cmd := exec.Command("npm", "i")
+	cmd.Dir = "./docs"
+	_, err := cmd.Output()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: could not run command: %s", err)
+	}
 }
 
 func makeDir(dirName string) {
