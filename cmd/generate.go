@@ -226,10 +226,13 @@ func starLight(apiKey string, writeFilePath string, file []byte) {
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: decoding response: %s", err)
 	}
+	filePath := "./docs/src/content/docs/reference/" + writeFilePath + ".md"
 
 	if len(response.Choices) > 0 {
+		println("I reached here")
+		println(filePath)
 		codeBlocks := extractCodeBlocks(response.Choices[0].Message.Content)
-		writeFile(writeFilePath, codeBlocks[0])
+		writeFile(filePath, codeBlocks[0])
 	}
 
 }

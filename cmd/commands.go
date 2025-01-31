@@ -67,7 +67,10 @@ var starCmd = &cobra.Command{
 Warning: The file contents will be replaced by the ai function.
           `,
 	Run: func(cmd *cobra.Command, args []string) {
+		fileName := args[0]
+		file := readFile(fileName)
 		getDocs()
+		starLight(apiKey, fileName, file)
 	},
 }
 
