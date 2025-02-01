@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"regexp"
-	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -168,8 +166,7 @@ func inlineComm(apiKey string, writeFilePath string, file []byte) {
 	}
 
 	if len(response.Choices) > 0 {
-		codeBlocks := extractCodeBlocks(response.Choices[0].Message.Content)
-		writeFile(writeFilePath, codeBlocks[0])
+		writeFile(writeFilePath, response.Choices[0].Message.Content)
 	}
 
 }
@@ -229,12 +226,7 @@ func starLight(apiKey string, writeFilePath string, file []byte) {
 	filePath := "./docs/src/content/docs/reference/" + writeFilePath + ".md"
 
 	if len(response.Choices) > 0 {
-		println("I reached here")
-		println(filePath)
-		codeBlocks := extractCodeBlocks(response.Choices[0].Message.Content)
-
 		writeFile(filePath, response.Choices[0].Message.Content)
-		fmt.Println(codeBlocks[1])
 	}
 
 }
@@ -262,6 +254,34 @@ func installDocs() {
 	}
 }
 
+func serveDocs() {
+	_, err := os.ReadDir("docs")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: could not find docs directory: %s\n", err)
+		os.Exit(1)
+	}
+	buildDocs()
+	runPreviewDocs()
+}
+func buildDocs() {
+	cmd := exec.Command("npm", "run", "build")
+	cmd.Dir = "docs"
+	_, err := cmd.Output()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: could not run command: %s\n", err)
+	}
+}
+
+func runPreviewDocs() {
+	cmd := exec.Command("npm", "run", "preview")
+	cmd.Dir = "docs"
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: could not run command: %s\n", err)
+	}
+	println(string(output))
+}
+
 func makeDir(dirName string) {
 	err := os.MkdirAll(dirName, 0644)
 	if err != nil {
@@ -284,35 +304,5 @@ func writeFile(filename string, data string) {
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: could not flush buffer: %s", err)
-	}
-}
-
-func extractCodeBlocks(md string) []string {
-	re := regexp.MustCompile("```(?s)(.*?)```")
-	matches := re.FindAllStringSubmatch(md, -1)
-
-	var results []string
-	for _, match := range matches {
-		if len(match) > 1 {
-			content := strings.TrimSpace(match[1])
-			if idx := strings.Index(content, "\n"); idx != -1 {
-				content = strings.TrimSpace(content[idx:])
-			}
-			results = append(results, content)
-		}
-	}
-
-	return results
-
-}
-
-func appendToFile(fileName string, content string) {
-	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not open file: %s", err)
-	}
-	defer file.Close()
-	if _, err := file.WriteString(content); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not write to file: %s", err)
 	}
 }
