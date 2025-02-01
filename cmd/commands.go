@@ -67,6 +67,13 @@ var starCmd = &cobra.Command{
 Warning: The file contents will be replaced by the ai function.
           `,
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) < 1 {
+			fmt.Fprintln(os.Stderr, "Error: please provide a <code path> or serve command ")
+			os.Exit(1)
+		}
+		if args[0] == "serve" {
+			serveDocs()
+		}
 		fileName := args[0]
 		file := readFile(fileName)
 		getDocs()
