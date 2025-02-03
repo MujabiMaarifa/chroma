@@ -71,9 +71,6 @@ Warning: The file contents will be replaced by the ai function.
 			fmt.Fprintln(os.Stderr, "Error: please provide a <code path> or serve command ")
 			os.Exit(1)
 		}
-		if args[0] == "serve" {
-			serveDocs()
-		}
 		fileName := args[0]
 		file := readFile(fileName)
 		getDocs()
@@ -81,10 +78,22 @@ Warning: The file contents will be replaced by the ai function.
 	},
 }
 
+var serveCmd = &cobra.Command{
+	Use:   "serve",
+	Short: "Serves generated astro docs",
+	Long: `Creates a docs directory with the generated documentation of the astro framework.
+Warning: The file contents will be replaced by the ai function.
+          `,
+	Run: func(cmd *cobra.Command, args []string) {
+		serveDocs()
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(markdownCmd)
 	rootCmd.AddCommand(inlineCmd)
 	rootCmd.AddCommand(starCmd)
+	starCmd.AddCommand(serveCmd)
 }
 
 func Execute() {
