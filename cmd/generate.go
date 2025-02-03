@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 )
@@ -223,7 +224,8 @@ func starLight(apiKey string, writeFilePath string, file []byte) {
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: decoding response: %s\n", err)
 	}
-	filePath := "./docs/src/content/docs/reference/" + writeFilePath + ".md"
+	fileNew := filepath.Base(writeFilePath)
+	filePath := "./docs/src/content/docs/reference/" + fileNew + ".md"
 
 	if len(response.Choices) > 0 {
 		writeFile(filePath, response.Choices[0].Message.Content)
