@@ -14,7 +14,7 @@ import (
 const (
 	default_star     = ` You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does and provide examples where necessary. Return ONLY the raw markdown content without any wrapper blocks or formatting. Start directly with the frontmatter (---). Do not include any backticks blocks around the entire response."`
 	default_markdown = " You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does. You will return markdown and only markdown.Make sure to keep your documentation brief but super clear.Start directly with the frontmatter (---). Do not include any backticks blocks around the entire response. "
-	default_inline   = " You are one of the greatest programmers to ever live, you will receive code and your job would be to add inline comments explaining what the code does. Keep the comments short but clear do not alter the file in any other way than to add comments and do not return anything other than the file provided with the comments.Do not return markdown or any other format just the code you have been given back with comments"
+	default_inline   = " You are one of the greatest programmers to ever live, you will receive code and your job would be to add inline comments explaining what the code does. Keep the comments short but clear do not alter the file in any other way than to add comments and do not return anything other than the file provided with the comments.Do not include any backticks blocks around the entire response."
 )
 
 type Config struct {
@@ -41,6 +41,24 @@ func Init() {
 		os.Exit(1)
 	}
 	utils.WriteFile("config.json", string(payLoad))
+	Load()
+}
+
+func Load() Config {
+	var config Config
+	file, err := os.Open("config.json")
+	if err != nil {
+		fmt.Println("Could not open file")
+		os.Exit(1)
+	}
+	reader := bufio.NewReader(file)
+	err = json.NewDecoder(reader).Decode(&config)
+	if err != nil {
+		fmt.Println("could not decode json")
+		os.Exit(1)
+	}
+	return config
+
 }
 
 func renderTextInput(prompt string) string {
