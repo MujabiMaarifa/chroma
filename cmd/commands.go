@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/chachacollins/chroma/cfg"
 	"github.com/spf13/cobra"
 )
 
@@ -78,6 +79,15 @@ Warning: The file contents will be replaced by the ai function.
 	},
 }
 
+var initCmd = &cobra.Command{
+	Use:   "init",
+	Short: "initialize proper env variable",
+	Long:  `Init`,
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg.Init()
+	},
+}
+
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Serves generated astro docs",
@@ -93,6 +103,7 @@ func init() {
 	rootCmd.AddCommand(markdownCmd)
 	rootCmd.AddCommand(inlineCmd)
 	rootCmd.AddCommand(starCmd)
+	rootCmd.AddCommand(initCmd)
 	starCmd.AddCommand(serveCmd)
 }
 

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -10,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/chachacollins/chroma/utils"
 	"github.com/joho/godotenv"
 )
 
@@ -108,7 +108,7 @@ func generateMd(apiKey string, writeFilePath string, file []byte) {
 	}
 
 	if len(response.Choices) > 0 {
-		writeFile(writeFilePath, response.Choices[0].Message.Content)
+		utils.WriteFile(writeFilePath, response.Choices[0].Message.Content)
 	}
 
 }
@@ -167,7 +167,7 @@ func inlineComm(apiKey string, writeFilePath string, file []byte) {
 	}
 
 	if len(response.Choices) > 0 {
-		writeFile(writeFilePath, response.Choices[0].Message.Content)
+		utils.WriteFile(writeFilePath, response.Choices[0].Message.Content)
 	}
 
 }
@@ -228,7 +228,7 @@ func starLight(apiKey string, writeFilePath string, file []byte) {
 	filePath := "./docs/src/content/docs/reference/" + fileNew + ".md"
 
 	if len(response.Choices) > 0 {
-		writeFile(filePath, response.Choices[0].Message.Content)
+		utils.WriteFile(filePath, response.Choices[0].Message.Content)
 	}
 
 }
@@ -282,29 +282,4 @@ func runPreviewDocs() {
 		fmt.Fprintf(os.Stderr, "Error: could not run command: %s\n", err)
 	}
 	println(string(output))
-}
-
-func makeDir(dirName string) {
-	err := os.MkdirAll(dirName, 0644)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not create a dir: %s", err)
-	}
-}
-
-func writeFile(filename string, data string) {
-	file, err := os.Create(filename)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not create file: %s", err)
-	}
-	defer file.Close()
-	writer := bufio.NewWriter(file)
-	_, err = writer.WriteString(data)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not write to file: %s", err)
-	}
-	err = writer.Flush()
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not flush buffer: %s", err)
-	}
 }
