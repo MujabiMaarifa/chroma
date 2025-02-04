@@ -7,7 +7,7 @@ import (
 )
 
 func MakeDir(dirName string) {
-	err := os.MkdirAll(dirName, 0644)
+	err := os.MkdirAll(dirName, os.ModePerm)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: could not create a dir: %s", err)
 	}

@@ -275,6 +275,7 @@ func buildDocs() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: could not run command: %s\n", err)
 	}
+
 }
 
 func runPreviewDocs() {
