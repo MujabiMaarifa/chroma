@@ -5,10 +5,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/chachacollins/chroma/cfg"
 	"github.com/spf13/cobra"
 )
-
-var apiKey = getApiKey()
 
 var rootCmd = &cobra.Command{
 	Use:   "chroma",
@@ -39,7 +38,7 @@ Warning: If a file already exists its contents will be replaced.
 			os.Exit(1)
 		}
 		file := readFile(fileName)
-		generateMd(apiKey, writeFilePath, file)
+		generateMd(writeFilePath, file)
 	},
 }
 
@@ -56,7 +55,7 @@ Warning: The file contents will be replaced by the ai function.
 		}
 		fileName := args[0]
 		file := readFile(fileName)
-		inlineComm(apiKey, fileName, file)
+		inlineComm(fileName, file)
 	},
 }
 
@@ -71,13 +70,30 @@ Warning: The file contents will be replaced by the ai function.
 			fmt.Fprintln(os.Stderr, "Error: please provide a <code path> or serve command ")
 			os.Exit(1)
 		}
-		if args[0] == "serve" {
-			serveDocs()
-		}
 		fileName := args[0]
 		file := readFile(fileName)
 		getDocs()
-		starLight(apiKey, fileName, file)
+		starLight(fileName, file)
+	},
+}
+
+var initCmd = &cobra.Command{
+	Use:   "init",
+	Short: "initialize proper env variable",
+	Long:  `Init`,
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg.Init()
+	},
+}
+
+var serveCmd = &cobra.Command{
+	Use:   "serve",
+	Short: "Serves generated astro docs",
+	Long: `Creates a docs directory with the generated documentation of the astro framework.
+Warning: The file contents will be replaced by the ai function.
+          `,
+	Run: func(cmd *cobra.Command, args []string) {
+		serveDocs()
 	},
 }
 
@@ -85,6 +101,8 @@ func init() {
 	rootCmd.AddCommand(markdownCmd)
 	rootCmd.AddCommand(inlineCmd)
 	rootCmd.AddCommand(starCmd)
+	rootCmd.AddCommand(initCmd)
+	starCmd.AddCommand(serveCmd)
 }
 
 func Execute() {

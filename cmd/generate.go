@@ -1,24 +1,19 @@
 package cmd
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 
-	"github.com/joho/godotenv"
+	"github.com/chachacollins/chroma/cfg"
+	"github.com/chachacollins/chroma/utils"
 )
 
 const API_URL = "https://api.mistral.ai/v1/chat/completions"
-
-var (
-	star     = ` You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does. Return ONLY the raw markdown content without any wrapper blocks or formatting. Start directly with the frontmatter (---). Do not include any backticks blocks around the entire response."`
-	markdown = " You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does. You will return markdown and only markdown.Make sure to keep your documentation brief but super clear.Start directly with the frontmatter (---). Do not include any backticks blocks around the entire response. "
-	inline   = " You are one of the greatest programmers to ever live, you will receive code and your job would be to add inline comments explaining what the code does. Keep the comments short but clear do not alter the file in any other way than to add comments and do not return anything other than the file provided with the comments.Do not return markdown or any other format just the code you have been given back with comments"
-)
 
 type Message struct {
 	Role    string `json:"role"`
@@ -32,19 +27,6 @@ type ChatRequest struct {
 	MaxTokens   int       `json:"max_tokens,omitempty"`
 }
 
-func getApiKey() string {
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: loading .env file: %s", err)
-	}
-
-	apiKey := os.Getenv("API_KEY")
-	if apiKey == "" {
-		fmt.Fprintf(os.Stderr, "API_KEY not found in environment variables")
-	}
-	return apiKey
-}
-
 func readFile(fileName string) []byte {
 	file, err := os.ReadFile(fileName)
 	if err != nil {
@@ -53,7 +35,7 @@ func readFile(fileName string) []byte {
 	return file
 }
 
-func generateMd(apiKey string, writeFilePath string, file []byte) {
+func generateMd(writeFilePath string, file []byte) {
 	generateMdPayload := ChatRequest{
 		Model: "codestral-latest",
 		Messages: []Message{
@@ -63,7 +45,7 @@ func generateMd(apiKey string, writeFilePath string, file []byte) {
 			},
 			{
 				Role:    "system",
-				Content: markdown,
+				Content: cfg.Load().MarkdownPrompt,
 			},
 		},
 		Temperature: 0.5,
@@ -80,7 +62,7 @@ func generateMd(apiKey string, writeFilePath string, file []byte) {
 		fmt.Fprintf(os.Stderr, "Error: creating generateMd: %s\n", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Authorization", "Bearer "+cfg.Load().Apikey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -107,12 +89,12 @@ func generateMd(apiKey string, writeFilePath string, file []byte) {
 	}
 
 	if len(response.Choices) > 0 {
-		writeFile(writeFilePath, response.Choices[0].Message.Content)
+		utils.WriteFile(writeFilePath, response.Choices[0].Message.Content)
 	}
 
 }
 
-func inlineComm(apiKey string, writeFilePath string, file []byte) {
+func inlineComm(writeFilePath string, file []byte) {
 	inlineCommPayload := ChatRequest{
 		Model: "codestral-latest",
 		Messages: []Message{
@@ -122,7 +104,7 @@ func inlineComm(apiKey string, writeFilePath string, file []byte) {
 			},
 			{
 				Role:    "system",
-				Content: inline,
+				Content: cfg.Load().InlinePrompt,
 			},
 		},
 		Temperature: 0.5,
@@ -139,7 +121,7 @@ func inlineComm(apiKey string, writeFilePath string, file []byte) {
 		fmt.Fprintf(os.Stderr, "Error: creating inlineComm: %s\n", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Authorization", "Bearer "+cfg.Load().Apikey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -166,12 +148,12 @@ func inlineComm(apiKey string, writeFilePath string, file []byte) {
 	}
 
 	if len(response.Choices) > 0 {
-		writeFile(writeFilePath, response.Choices[0].Message.Content)
+		utils.WriteFile(writeFilePath, response.Choices[0].Message.Content)
 	}
 
 }
 
-func starLight(apiKey string, writeFilePath string, file []byte) {
+func starLight(writeFilePath string, file []byte) {
 	starLightPayload := ChatRequest{
 		Model: "codestral-latest",
 		Messages: []Message{
@@ -181,7 +163,7 @@ func starLight(apiKey string, writeFilePath string, file []byte) {
 			},
 			{
 				Role:    "system",
-				Content: star,
+				Content: cfg.Load().StarPrompt,
 			},
 		},
 		Temperature: 0.5,
@@ -198,7 +180,7 @@ func starLight(apiKey string, writeFilePath string, file []byte) {
 		fmt.Fprintf(os.Stderr, "Error: creating starLight: %s\n", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Authorization", "Bearer "+cfg.Load().Apikey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -223,10 +205,11 @@ func starLight(apiKey string, writeFilePath string, file []byte) {
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: decoding response: %s\n", err)
 	}
-	filePath := "./docs/src/content/docs/reference/" + writeFilePath + ".md"
+	fileNew := filepath.Base(writeFilePath)
+	filePath := "./docs/src/content/docs/reference/" + fileNew + ".md"
 
 	if len(response.Choices) > 0 {
-		writeFile(filePath, response.Choices[0].Message.Content)
+		utils.WriteFile(filePath, response.Choices[0].Message.Content)
 	}
 
 }
@@ -270,6 +253,7 @@ func buildDocs() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: could not run command: %s\n", err)
 	}
+
 }
 
 func runPreviewDocs() {
@@ -280,29 +264,4 @@ func runPreviewDocs() {
 		fmt.Fprintf(os.Stderr, "Error: could not run command: %s\n", err)
 	}
 	println(string(output))
-}
-
-func makeDir(dirName string) {
-	err := os.MkdirAll(dirName, 0644)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not create a dir: %s", err)
-	}
-}
-
-func writeFile(filename string, data string) {
-	file, err := os.Create(filename)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not create file: %s", err)
-	}
-	defer file.Close()
-	writer := bufio.NewWriter(file)
-	_, err = writer.WriteString(data)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not write to file: %s", err)
-	}
-	err = writer.Flush()
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not flush buffer: %s", err)
-	}
 }
