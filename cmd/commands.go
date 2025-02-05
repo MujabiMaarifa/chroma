@@ -9,8 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var apiKey = getApiKey()
-
 var rootCmd = &cobra.Command{
 	Use:   "chroma",
 	Short: "chroma is a command line documentation generator",
@@ -40,7 +38,7 @@ Warning: If a file already exists its contents will be replaced.
 			os.Exit(1)
 		}
 		file := readFile(fileName)
-		generateMd(apiKey, writeFilePath, file)
+		generateMd(writeFilePath, file)
 	},
 }
 
@@ -57,7 +55,7 @@ Warning: The file contents will be replaced by the ai function.
 		}
 		fileName := args[0]
 		file := readFile(fileName)
-		inlineComm(apiKey, fileName, file)
+		inlineComm(fileName, file)
 	},
 }
 
@@ -75,7 +73,7 @@ Warning: The file contents will be replaced by the ai function.
 		fileName := args[0]
 		file := readFile(fileName)
 		getDocs()
-		starLight(apiKey, fileName, file)
+		starLight(fileName, file)
 	},
 }
 

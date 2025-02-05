@@ -79,7 +79,7 @@ func Load() Config {
 
 	file, err := os.Open(configDir + "/config.json")
 	if err != nil {
-		return Config{}
+		fmt.Fprintf(os.Stderr, "Could not open file: %s", err)
 	}
 	defer file.Close()
 

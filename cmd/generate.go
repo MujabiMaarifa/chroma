@@ -11,18 +11,9 @@ import (
 
 	"github.com/chachacollins/chroma/cfg"
 	"github.com/chachacollins/chroma/utils"
-	"github.com/joho/godotenv"
 )
 
 const API_URL = "https://api.mistral.ai/v1/chat/completions"
-
-var config = cfg.Load()
-
-var (
-	star     = config.StarPrompt
-	markdown = config.MarkdownPrompt
-	inline   = config.InlinePrompt
-)
 
 type Message struct {
 	Role    string `json:"role"`
@@ -36,19 +27,6 @@ type ChatRequest struct {
 	MaxTokens   int       `json:"max_tokens,omitempty"`
 }
 
-func getApiKey() string {
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: loading .env file: %s", err)
-	}
-
-	apiKey := os.Getenv("API_KEY")
-	if apiKey == "" {
-		fmt.Fprintf(os.Stderr, "API_KEY not found in environment variables")
-	}
-	return apiKey
-}
-
 func readFile(fileName string) []byte {
 	file, err := os.ReadFile(fileName)
 	if err != nil {
@@ -57,7 +35,7 @@ func readFile(fileName string) []byte {
 	return file
 }
 
-func generateMd(apiKey string, writeFilePath string, file []byte) {
+func generateMd(writeFilePath string, file []byte) {
 	generateMdPayload := ChatRequest{
 		Model: "codestral-latest",
 		Messages: []Message{
@@ -67,7 +45,7 @@ func generateMd(apiKey string, writeFilePath string, file []byte) {
 			},
 			{
 				Role:    "system",
-				Content: markdown,
+				Content: cfg.Load().MarkdownPrompt,
 			},
 		},
 		Temperature: 0.5,
@@ -84,7 +62,7 @@ func generateMd(apiKey string, writeFilePath string, file []byte) {
 		fmt.Fprintf(os.Stderr, "Error: creating generateMd: %s\n", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Authorization", "Bearer "+cfg.Load().Apikey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -116,7 +94,7 @@ func generateMd(apiKey string, writeFilePath string, file []byte) {
 
 }
 
-func inlineComm(apiKey string, writeFilePath string, file []byte) {
+func inlineComm(writeFilePath string, file []byte) {
 	inlineCommPayload := ChatRequest{
 		Model: "codestral-latest",
 		Messages: []Message{
@@ -126,7 +104,7 @@ func inlineComm(apiKey string, writeFilePath string, file []byte) {
 			},
 			{
 				Role:    "system",
-				Content: inline,
+				Content: cfg.Load().InlinePrompt,
 			},
 		},
 		Temperature: 0.5,
@@ -143,7 +121,7 @@ func inlineComm(apiKey string, writeFilePath string, file []byte) {
 		fmt.Fprintf(os.Stderr, "Error: creating inlineComm: %s\n", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Authorization", "Bearer "+cfg.Load().Apikey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -175,7 +153,7 @@ func inlineComm(apiKey string, writeFilePath string, file []byte) {
 
 }
 
-func starLight(apiKey string, writeFilePath string, file []byte) {
+func starLight(writeFilePath string, file []byte) {
 	starLightPayload := ChatRequest{
 		Model: "codestral-latest",
 		Messages: []Message{
@@ -185,7 +163,7 @@ func starLight(apiKey string, writeFilePath string, file []byte) {
 			},
 			{
 				Role:    "system",
-				Content: star,
+				Content: cfg.Load().StarPrompt,
 			},
 		},
 		Temperature: 0.5,
@@ -202,7 +180,7 @@ func starLight(apiKey string, writeFilePath string, file []byte) {
 		fmt.Fprintf(os.Stderr, "Error: creating starLight: %s\n", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Authorization", "Bearer "+cfg.Load().Apikey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
