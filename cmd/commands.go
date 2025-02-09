@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/chachacollins/chroma/cfg"
+	"github.com/chachacollins/chroma/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -27,14 +28,14 @@ Warning: If a file already exists its contents will be replaced.
           `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
-			fmt.Fprintln(os.Stderr, "Error: please provide a <code path> : <save file>")
+			utils.PrintError("Error: please provide a <code path> : <save file>")
 			os.Exit(1)
 		}
 		fileName := args[0]
 		writeFilePath := args[1]
 		split := strings.Split(writeFilePath, ".")
 		if split[1] != "md" {
-			fmt.Fprintln(os.Stderr, "Error: please provide a filename with a markdown extension")
+			utils.PrintError("Error: please provide a filename with a markdown extension")
 			os.Exit(1)
 		}
 		file := readFile(fileName)
@@ -50,7 +51,7 @@ Warning: The file contents will be replaced by the ai function.
           `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			fmt.Fprintln(os.Stderr, "Error: please provide a <code path> ")
+			utils.PrintError("Error: please provide a <code path> ")
 			os.Exit(1)
 		}
 		fileName := args[0]
@@ -67,7 +68,7 @@ Warning: The file contents will be replaced by the ai function.
           `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			fmt.Fprintln(os.Stderr, "Error: please provide a <code path> or serve command ")
+			utils.PrintError("Error: please provide a <code path> or serve command ")
 			os.Exit(1)
 		}
 		fileName := args[0]
@@ -107,7 +108,7 @@ func init() {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}
 }
