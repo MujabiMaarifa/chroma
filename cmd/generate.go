@@ -36,6 +36,7 @@ func readFile(fileName string) []byte {
 }
 
 func generateMd(writeFilePath string, file []byte) {
+	utils.PrintLog("Generating markdown...")
 	generateMdPayload := ChatRequest{
 		Model: "codestral-latest",
 		Messages: []Message{
@@ -91,10 +92,11 @@ func generateMd(writeFilePath string, file []byte) {
 	if len(response.Choices) > 0 {
 		utils.WriteFile(writeFilePath, response.Choices[0].Message.Content)
 	}
-
+	utils.PrintSuccess("Generated markdown")
 }
 
 func inlineComm(writeFilePath string, file []byte) {
+	utils.PrintLog("Generating inline documentation...")
 	inlineCommPayload := ChatRequest{
 		Model: "codestral-latest",
 		Messages: []Message{
@@ -148,12 +150,15 @@ func inlineComm(writeFilePath string, file []byte) {
 	}
 
 	if len(response.Choices) > 0 {
-		utils.WriteFile(writeFilePath, response.Choices[0].Message.Content)
+		content := utils.ExtractCodeBlocks(response.Choices[0].Message.Content)
+		utils.WriteFile(writeFilePath, content[0])
 	}
+	utils.PrintSuccess("Generated inline documentation")
 
 }
 
 func starLight(writeFilePath string, file []byte) {
+	utils.PrintLog("Generating starlight documentation...")
 	starLightPayload := ChatRequest{
 		Model: "codestral-latest",
 		Messages: []Message{
@@ -211,11 +216,11 @@ func starLight(writeFilePath string, file []byte) {
 	if len(response.Choices) > 0 {
 		utils.WriteFile(filePath, response.Choices[0].Message.Content)
 	}
-
+	utils.PrintSuccess("Generated starlight docs")
 }
 
 func getDocs() {
-
+	utils.PrintLog("Fetching docs...")
 	_, errr := os.ReadDir("./docs")
 	if errr != nil {
 		cmd := exec.Command("git", "clone", "--depth=1", "https://github.com/chachacollins/chromatemplate.git", "docs")
@@ -223,18 +228,26 @@ func getDocs() {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: could not run command: %s\n", err)
 		}
-
+		cmd = exec.Command("rm", "-rf", ".git")
+		cmd.Dir = "./docs"
+		_, err = cmd.Output()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: could not run command: %s\n", err)
+		}
+		utils.PrintSuccess("Finished getting docs")
 		installDocs()
 	}
 }
 
 func installDocs() {
+	utils.PrintLog("installing docs...")
 	cmd := exec.Command("npm", "i")
 	cmd.Dir = "./docs"
 	_, err := cmd.Output()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: could not run command: %s", err)
 	}
+	utils.PrintSuccess("Installed docs successfully")
 }
 
 func serveDocs() {
@@ -247,21 +260,28 @@ func serveDocs() {
 	runPreviewDocs()
 }
 func buildDocs() {
+	utils.PrintLog("Building the docs...")
 	cmd := exec.Command("npm", "run", "build")
 	cmd.Dir = "docs"
 	_, err := cmd.Output()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: could not run command: %s\n", err)
 	}
+	utils.PrintSuccess("Finished building docs")
 
 }
 
 func runPreviewDocs() {
 	cmd := exec.Command("npm", "run", "preview")
 	cmd.Dir = "docs"
-	output, err := cmd.Output()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not run command: %s\n", err)
+	if err := cmd.Start(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: could not start command: %s\n", err)
+		return
 	}
-	println(string(output))
+
+	utils.PrintLog("running the server at localhost:4321")
+
+	if err := cmd.Wait(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: command exited with error: %s\n", err)
+	}
 }

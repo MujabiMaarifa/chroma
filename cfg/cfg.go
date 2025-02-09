@@ -15,13 +15,14 @@ import (
 
 const (
 	// Default prompt for generating markdown documentation
-	default_star = ` You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does and provide examples where necessary. Return ONLY the raw markdown content without any wrapper blocks or formatting. Start directly with the frontmatter (---). Do not include any backticks blocks around the entire response."`
+	default_star = ` You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does in detail explaining every single part of it including types and functions and provide examples of how to use the code. Return ONLY the raw markdown content without any wrapper blocks or formatting. Start directly with the frontmatter (---). Do not include any backticks blocks around the entire response."`
 
 	// Default prompt for generating markdown documentation
 	default_markdown = " You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does. You will return markdown and only markdown.Make sure to keep your documentation brief but super clear.Start directly with the frontmatter (---). Do not include any backticks blocks around the entire response. "
 
 	// Default prompt for adding inline comments
-	default_inline = " You are one of the greatest programmers to ever live, you will receive code and your job would be to add inline comments explaining what the code does. Keep the comments short but clear do not alter the file in any other way than to add comments and do not return anything other than the file provided with the comments.Start directly with the frontmatter.Do not include any backticks (```) blocks around the entire response."
+	default_inline = ` You are one of the greatest programmers to ever live, you will receive code and your job would be to add inline comments explaining what the code does. Keep the comments short but clear do not alter the file in any other way than to add comments and do not return anything other than the file provided with the comments.Do not return markdown or any other format just the code you have been given back with comments
+`
 )
 
 // Config struct holds the configuration settings
@@ -80,6 +81,7 @@ func Load() Config {
 	file, err := os.Open(configDir + "/config.json")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not open file: %s", err)
+		os.Exit(1)
 	}
 	defer file.Close()
 
