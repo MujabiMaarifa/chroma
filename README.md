@@ -30,6 +30,8 @@ go build -o chroma
 mv chroma /usr/local/bin/
 ```
 
+Pre-built binaries for **Windows** and **Linux** are available on the [Releases](https://github.com/chachacollins/chroma/releases) page.
+
 ## Usage
 
 ### 1. Generate Markdown Documentation
@@ -88,4 +90,5 @@ This project is licensed under the **MIT License**.
 
 ---
 
+For more details, visit the [GitHub repository](https://github.com/chachacollins/chroma).
 
