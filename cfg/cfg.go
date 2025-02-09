@@ -15,7 +15,7 @@ import (
 
 const (
 	// Default prompt for generating markdown documentation
-	default_star = ` You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does and provide examples where necessary. Return ONLY the raw markdown content without any wrapper blocks or formatting. Start directly with the frontmatter (---). Do not include any backticks blocks around the entire response."`
+	default_star = ` You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does in detail explaining every single part of it including types and functions and provide examples of how to use the code. Return ONLY the raw markdown content without any wrapper blocks or formatting. Start directly with the frontmatter (---). Do not include any backticks blocks around the entire response."`
 
 	// Default prompt for generating markdown documentation
 	default_markdown = " You are one of the greatest programmers to ever live, you will receive code and your job would be to generate markdown documentation elaborating what the code does. You will return markdown and only markdown.Make sure to keep your documentation brief but super clear.Start directly with the frontmatter (---). Do not include any backticks blocks around the entire response. "
