@@ -84,7 +84,7 @@ func Load() Config {
 		os.Exit(1)
 	}
 	defer file.Close()
-
+//edited by mujabi
 	reader := bufio.NewReader(file)
 	err = json.NewDecoder(reader).Decode(&config)
 	if err != nil {
